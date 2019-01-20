@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <!-- 入门程序 -->
-        <module>springboot-01-helloworld</module>
+        <module>spring-boot-01-helloworld</module>
     </modules>
 
 

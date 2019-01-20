@@ -37,8 +37,27 @@
 十六、Spring Boot 与监控管理
 
 
-### 优秀文章
 
-[jeff1993/springboot-learning-example](https://gitee.com/jeff1993/springboot-learning-example)
+### 参考资料
 
-[dyc87112/SpringBoot-Learning](https://github.com/dyc87112/SpringBoot-Learning)
+[官方参考文档](http://docs.spring.io/spring-boot/docs/1.5.2.RELEASE/reference/htmlsingle/#getting-started-first-application)
+
+[官方SpriongBoot例子源码](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
+
+[程序猿DD-Spring Boot系列](http://blog.didispace.com/categories/Spring-Boot/)
+
+[纯洁的微笑-Sping Boot系列文章](http://www.ityouknow.com/spring-boot)
+
+[梁桂钊的博客-Spring Boot 揭秘与实战](http://blog.720ui.com/columns/springboot_all/)
+
+[方志朋Spring Boot 专栏](http://blog.csdn.net/column/details/15397.html)
+
+[江南一点雨-关于Spring Boot](http://blog.csdn.net/column/details/13987.html)
+
+[杜琪关于Spring Boot的博客集合](http://www.jianshu.com/p/7e2e5e7b32ab)
+
+[泥瓦匠BYSocket的Spring Boot系列](http://www.bysocket.com/?page_id=1639)
+
+[dalaoyang-Spring Boot](https://www.dalaoyang.cn/tag/springboot/)
+
+[Spring Boot 中文索引](http://springboot.fun/)
