@@ -9,7 +9,7 @@ Spring Boot使用一个全局的配置文件
 
 配置文件放在`src/main/resources`目录或者类路径 /config 下
 
-**yml **是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
+**yml** 是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
 心，比 json、xml 等更适合做配置文件
 
 http://www.yaml.org/ 参考语法规范
