@@ -1,15 +1,15 @@
 server:
   port: 8081
 
-person:
-  name: xiaoming
-  age: 18
-  boss: true
-  birth: 2010/01/01
-  maps:
-    hello: world
-    say: hello
-  lists: [dog,cat,pig]
-  animal:
-    name: xiaohuang
-    age: 3
+#person:
+#  name: 小马
+#  age: 18
+#  boss: true
+#  birth: 2010/01/01
+#  maps:
+#    hello: world
+#    say: hello
+#  lists: [dog,cat,pig]
+#  animal:
+#    name: xiaohuang
+#    age: 3
