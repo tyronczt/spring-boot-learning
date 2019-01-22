@@ -4,7 +4,7 @@
 
 一、[Spring Boot 入门](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-01-helloworld)
 
-二、Spring Boot 配置
+二、[Spring Boot 配置](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-02-config)
 
 三、Spring Boot 与日志
 
