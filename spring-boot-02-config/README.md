@@ -129,6 +129,60 @@ person:
 ```java
 Person{name='xiaoming', age=18, boss=true, birth=Fri Jan 01 00:00:00 CST 2010, maps={hello=world, say=hello}, lists=[dog, cat, pig], animal=Animal{name='xiaohuang', age=3}}
 ```
+##### 3.1、properties配置文件在idea中默认utf-8可能会乱码
+
+File --> Editor --> File Encodings
+
+![properties配置文件在idea中默认utf-8可能会乱码](https://github.com/tyronczt/spring-boot-learning/blob/master/images/spring-boot-config-01.png)
+
+##### 3.2、@Value获取值和@ConfigurationProperties获取值比较
+
+|                      | @ConfigurationProperties | @Value     |
+| -------------------- | ------------------------ | ---------- |
+| 功能                 | 批量注入配置文件中的属性 | 一个个指定 |
+| 松散绑定（松散语法） | 支持                     | 不支持     |
+| SpEL                 | 不支持                   | 支持       |
+| JSR303数据校验       | 支持                     | 不支持     |
+| 复杂类型封装         | 支持                     | 不支持     |
+
+配置文件yml还是properties都能获取到值；
+
+如果说，我们只是在某个业务逻辑中需要获取一下配置文件中的某项值，使用@Value；
+
+如果说，我们专门编写了一个javaBean来和配置文件进行映射，我们就直接使用@ConfigurationProperties；
+
+```java
+@Component
+@ConfigurationProperties(prefix = "person")
+@Validated
+public class Person {
+
+    /**
+     * <bean class="Person">
+     *      <property name="lastName" value="字面量/${key}从环境变量、配置文件中获取值/#{SpEL}"></property>
+     * <bean/>
+     */
+
+//    @Value("${person.name}")
+//    @Email
+    private String name;
+//    @Value("#{11*3}")
+    private Integer age;
+//    @Value("false")
+    private Boolean boss;
+//    @Value("2010/01/01")
+    private Date birth;
+
+    // 通过@Value的测试：Person{name='小马', age=33, boss=false, birth=Fri Jan 01 00:00:00 CST 2010, maps=null, lists=null, animal=null}
+
+    //    @Value("${person.maps}")---不支持这种写法（IllegalArgumentException）
+    private Map<String, Object> maps;
+    private List<Object> lists;
+    private Animal animal;
+```
+
+
+
 
 
 
