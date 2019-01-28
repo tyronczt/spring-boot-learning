@@ -181,6 +181,119 @@ public class Person {
     private Animal animal;
 ```
 
+##### 3.4、@PropertySource & @ImportResource & @Bean
+
+**@PropertySource**：加载指定的配置文件；
+
+person.properties
+
+```properties
+# 配置person的属性
+person.name=小李
+person.age=15
+person.birth=2011/01/01
+person.boss=false
+person.animal.name=小灰
+person.animal.age=1
+person.maps.h1=11
+person.maps.jj=11
+person.lists=1,2,3
+```
+
+Person.java 部分
+
+```java
+@PropertySource(value = {"classpath:person.properties"})
+@Component
+@ConfigurationProperties(prefix = "person")
+//@Validated
+public class Person {
+    ...
+}
+```
+
+test测试数据
+
+```java
+Person{name='小李', age=15, boss=false, birth=Sat Jan 01 00:00:00 CST 2011, 
+maps={h1=11, jj=11}, lists=[1, 2, 3], animal=Animal{name='小灰', age=1}}
+```
+
+**@ImportResource**：导入Spring的配置文件，让配置文件里面的内容生效；
+
+bean的配置文件：beans.xml
+
+```xml
+<bean id="helloService" class="com.tyron.springboot.service.HelloService"></bean>
+```
+
+启动类：SpringBoot02ConfigApplication.java
+
+```java
+@ImportResource(value = "classpath:beans.xml")
+@SpringBootApplication
+public class SpringBoot02ConfigApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringBoot02ConfigApplication.class, args);
+    }
+}
+```
+
+测试方法：
+
+```java
+@Autowired
+ApplicationContext ioc;
+
+@Test
+public void testService() {
+    boolean containsBean = ioc.containsBean("helloService");
+    System.out.println("containsBean：" + containsBean);
+}
+
+// 输出结果：
+containsBean：true
+```
+
+SpringBoot推荐给容器中添加组件的方式；**推荐使用全注解的方式**
+
+配置类 MyAppConfig：
+
+```java
+/**
+ * @Configuration 指明当前类是配置类，代替之前的xml配置文件
+ * 在Spring配置文件中使用<bean></bean>，在配置文件中使用@Bean 注解
+ */
+@Configuration
+public class MyAppConfig {
+
+    /**
+     * @Bean 注解的作用是将方法的返回值添加到容器中；
+     * 容器中该组件默认的id就是方法名
+     */
+    @Bean
+    public HelloService helloService02() {
+        System.out.println("通过配置类的方式注入Bean");
+        return new HelloService();
+    }
+}
+```
+
+测试方法：
+
+```java
+@Test
+public void testService() {
+    boolean containsBean = ioc.containsBean("helloService02");
+    System.out.println("containsBean：" + containsBean);
+}
+
+// 输出结果
+通过配置类的方式注入Bean
+containsBean：true
+```
+
 
 
 
