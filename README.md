@@ -4,7 +4,7 @@
 
 一、[Spring Boot 入门](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-01-helloworld)
 
-二、Spring Boot 配置
+二、[Spring Boot 配置](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-02-config)
 
 三、Spring Boot 与日志
 
@@ -61,3 +61,7 @@
 [dalaoyang-Spring Boot](https://www.dalaoyang.cn/tag/springboot/)
 
 [Spring Boot 中文索引](http://springboot.fun/)
+
+[尚硅谷Spring Boot 核心技术篇---提取码: ci22](https://pan.baidu.com/s/1vDX_Yjm1-mI54QnbtEbjeQ)
+
+[尚硅谷Spring Boot 整合篇---提取码: dth4](https://pan.baidu.com/s/1q9ri9mOivEjzqhWq56Z-7A)
