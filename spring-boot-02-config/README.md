@@ -9,7 +9,7 @@ Spring Boot使用一个全局的配置文件
 
 配置文件放在`src/main/resources`目录或者类路径 /config 下
 
-**yml **是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
+**yml** 是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
 心，比 json、xml 等更适合做配置文件
 
 http://www.yaml.org/ 参考语法规范
@@ -134,7 +134,7 @@ Person{name='xiaoming', age=18, boss=true, birth=Fri Jan 01 00:00:00 CST 2010, m
 
 File --> Editor --> File Encodings
 
-![](C:\Users\Administrator\Desktop\java-learn\images\spring-boot-config-01.png)
+![](https://github.com/tyronczt/spring-boot-learning/blob/master/images/spring-boot-config-01.png)
 
 ##### 3.2、@Value获取值和@ConfigurationProperties获取值比较
 
@@ -384,7 +384,21 @@ springboot 启动会扫描以下位置的application.properties或者application
 
 优先级由高到底，高优先级的配置会覆盖低优先级的配置；
 
+如图：
+
+![](C:\Users\Administrator\Desktop\java-learn\images\spring-boot-config-02.png)
+
 SpringBoot会从这四个位置全部加载主配置文件；**互补配置**；
 
+通过spring.config.location可以改变默认的配置文件位置
 
+项目打包好以后，我们可以使用命令行参数的形式，启动项目的时候来指定配置文件的新位置；指定配置文件和默认加载的这些配置文件共同起作用形成互补配置；
+
+java -jar spring-boot-02-config02-0.0.1-SNAPSHOT.jar --spring.config.location=D/application.properties
+
+
+
+#### 7、外部配置加载顺序
+
+官方文档地址：https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#boot-features-external-config
 
