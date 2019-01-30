@@ -386,7 +386,7 @@ springboot 启动会扫描以下位置的application.properties或者application
 
 如图：
 
-![](C:\Users\Administrator\Desktop\java-learn\images\spring-boot-config-02.png)
+![](https://github.com/tyronczt/spring-boot-learning/blob/master/images/spring-boot-config-02.png)
 
 SpringBoot会从这四个位置全部加载主配置文件；**互补配置**；
 
