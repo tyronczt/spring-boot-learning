@@ -1,6 +1,6 @@
 ## Spring Boot 配置
 
-### 1、配置文件
+### 一、配置文件
 
 Spring Boot使用一个全局的配置文件
 
@@ -9,7 +9,7 @@ Spring Boot使用一个全局的配置文件
 
 配置文件放在`src/main/resources`目录或者类路径 /config 下
 
-**yml** 是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
+**yml **是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
 心，比 json、xml 等更适合做配置文件
 
 http://www.yaml.org/ 参考语法规范
@@ -31,7 +31,7 @@ XML ：配置例子
 </server>
 ```
 
-### 2、YAML语法
+### 二、YAML语法
 
 #### 1、基本语法
 
@@ -50,9 +50,9 @@ XML ：配置例子
 
 - 数字、字符串、布尔、日期
 - 字符串
-- 默认不使用引号
-- 可以使用单引号或者双引号，单引号会转义特殊字符，双引号不会转义
-- 字符串可以写成多行，从第二行开始，必须有一个单空格缩进，换行符会被转为空格。
+  - 默认不使用引号
+  - 可以使用单引号或者双引号，单引号会转义特殊字符，双引号不会转义
+  - 字符串可以写成多行，从第二行开始，必须有一个单空格缩进，换行符会被转为空格。
 
 name:   "zhangsan \n lisi"：输出；zhangsan 换行  lisi
 
@@ -129,11 +129,12 @@ person:
 ```java
 Person{name='xiaoming', age=18, boss=true, birth=Fri Jan 01 00:00:00 CST 2010, maps={hello=world, say=hello}, lists=[dog, cat, pig], animal=Animal{name='xiaohuang', age=3}}
 ```
+
 ##### 3.1、properties配置文件在idea中默认utf-8可能会乱码
 
 File --> Editor --> File Encodings
 
-![properties配置文件在idea中默认utf-8可能会乱码](https://github.com/tyronczt/spring-boot-learning/blob/master/images/spring-boot-config-01.png)
+![](C:\Users\Administrator\Desktop\java-learn\images\spring-boot-config-01.png)
 
 ##### 3.2、@Value获取值和@ConfigurationProperties获取值比较
 
@@ -150,6 +151,8 @@ File --> Editor --> File Encodings
 如果说，我们只是在某个业务逻辑中需要获取一下配置文件中的某项值，使用@Value；
 
 如果说，我们专门编写了一个javaBean来和配置文件进行映射，我们就直接使用@ConfigurationProperties；
+
+##### 3.3、配置文件注入值数据校验
 
 ```java
 @Component
@@ -294,9 +297,94 @@ public void testService() {
 containsBean：true
 ```
 
+#### 4、配置文件占位符
 
+##### 4.1 随机数
 
+```properties
+${random.value}、${random.int}、${random.long}、${random.uuid}
+${random.int(10)}、${random.int[1024,65536]}
+```
 
+##### 4.2、占位符获取之前配置的值，如果没有可以是用:指定默认值
+
+```properties
+${person.hello:hello}_h1
+```
+
+例子：
+
+```properties
+# 配置person的属性
+person.name=小李${random.uuid}
+person.age=${random.int}
+person.birth=2011/01/01
+person.boss=false
+person.animal.name=${person.name}_animal
+person.animal.age=${random.int(10)}
+person.maps.h1=${person.hello:hello}_h1
+person.maps.jj=${random.value}
+person.lists=1,2,3
+
+# 打印结果
+Person{name='小马33922644-860e-4655-b1cd-0f4da7862169', age=-1366299504, boss=false, birth=Sat Jan 01 00:00:00 CST 2011, maps={h1=hello_h1, jj=f4903021ea950ac7529dbcd9e300fc26}, lists=[1, 2, 3], animal=Animal{name='小马b3c42bef-e6a1-4bbe-98fd-e1a7ed771238_animal', age=7}}
+```
+
+#### 5、Profile
+
+##### 5.1、多Profile
+
+在主配置文件编写的时，文件名可以是   application-{profile}.properties/yml
+
+默认使用 **application.properties** 的配置；
+
+##### 5.2、yml支持多文档块方式
+
+```yaml
+server:
+  port: 8081
+spring:
+  profiles:
+    active: dev
+---
+server:
+  port: 8082
+spring:
+  profiles: dev
+
+---
+server:
+  port: 8083
+spring:
+  profiles: prod
+```
+
+##### 5.3、激活指定profile
+
+- 在**配置文件**中指定  spring.profiles.active=dev [properties的格式]，yml的激活方式如上；
+- **启动参数**[Program arguments]：--spring.profiles.active=dev
+- **命令行**：mvn-package 打成jar包后，java -jar spring-boot-02-config-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
+- **虚拟机参数**[VM options]：-Dspring.profiles.active=dev
+
+注：properties文件的优先级高于yml文件
+
+#### 6、配置文件加载位置
+
+springboot 启动会扫描以下位置的application.properties或者application.yml文件作为Spring boot的默认配置文件
+
+–file:./config/   
+
+–file:./
+
+–classpath:/config/
+
+–classpath:/
+
+注：[-file ：当前项目的文件路径；–classpath：类路径]
+
+优先级由高到底，高优先级的配置会覆盖低优先级的配置；
+
+SpringBoot会从这四个位置全部加载主配置文件；**互补配置**；
 
 
 
