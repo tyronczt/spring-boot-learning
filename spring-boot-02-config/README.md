@@ -402,3 +402,113 @@ java -jar spring-boot-02-config02-0.0.1-SNAPSHOT.jar --spring.config.location=D/
 
 官方文档地址：https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#boot-features-external-config
 
+**1.命令行参数**
+
+所有的配置都可以在命令行上进行指定
+
+java -jar spring-boot-02-config-02-0.0.1-SNAPSHOT.jar --server.port=8087  --server.context-path=/abc
+
+多个配置用空格分开； --配置项=值
+
+
+
+2.来自java:comp/env的JNDI属性
+
+3.Java系统属性（System.getProperties()）
+
+4.操作系统环境变量
+
+5.RandomValuePropertySource配置的random.*属性值
+
+6.jar包外部的application-{profile}.properties或application.yml(带spring.profile)配置文件
+
+7.jar包内部的application-{profile}.properties或application.yml(带spring.profile)配置文件
+
+8.jar包外部的application.properties或application.yml(不带spring.profile)配置文件
+
+9.jar包内部的application.properties或application.yml(不带spring.profile)配置文件
+
+10.@Configuration注解类上的@PropertySource
+
+11.通过SpringApplication.setDefaultProperties指定的默认属性
+
+
+#### 8、自动配置原理
+
+配置文件能配置的属性参照：[官方配置文档](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
+
+##### 自动配置原理解析
+
+1）、SpringBoot启动的时候加载主配置类，开启了自动配置功能 **@EnableAutoConfiguration**
+
+2）、@EnableAutoConfiguration 作用：
+
+- 利用 **EnableAutoConfigurationImportSelector** 给容器导入一些组件；
+- 可以插入 EnableAutoConfigurationImportSelector 的父类 **AutoConfigurationImportSelector** 中 `selectImports() ` 方法的内容；
+- List<String> configurations = this.getCandidateConfigurations(annotationMetadata, attributes);获取候选的配置
+- 通过 `SpringFactoriesLoader.loadFactoryNames()` 方法扫描所有jar包类路径下的 `META-INF/spring.factories` 文件，把扫描到的这些文件的内容包装成properties对象从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后把他们添加在容器中；
+- D:\maven\repository\org\springframework\boot\spring-boot-autoconfigure\1.5.9.RELEASE\spring-boot-autoconfigure-1.5.9.RELEASE.jar!\META-INF\spring.factories 将 类路径下  `META-INF/spring.factories` 里面配置的所有EnableAutoConfiguration的值加入到了容器中；
+- 每一个这样的  xxxAutoConfiguration类都是容器中的一个组件，都加入到容器中来做自动配置；
+
+3）、每一个自动配置类进行自动配置功能；
+
+4）、以**HttpEncodingAutoConfiguration（Http编码自动配置）**为例解释自动配置原理；
+
+```java
+@Configuration // 表示这是一个配置类，类似以前的配置文件，给容器中添加组件
+@EnableConfigurationProperties({HttpEncodingProperties.class})// 启动指定类ConfigurationProperties功能；将配置文件中对应的值和HttpEncodingProperties绑定起来
+@ConditionalOnWebApplication // Spring底层@Conditional注解，根据不同条件，如果满足指定的条件，整个配置类里面的配置就会生效。 判断当前应用是否为web应用，如果是，当前配置类生效
+@ConditionalOnClass({CharacterEncodingFilter.class})// 判断当前项目有没有该类   CharacterEncodingFilter 为SpringMVC中解决乱码问题的过滤器；
+@ConditionalOnProperty(
+    prefix = "spring.http.encoding",
+    value = {"enabled"},
+    matchIfMissing = true
+)// 判断配置文件中是否存在某个配置，如上表示即使我们不配置spring.http.encoding.enabled默认为true
+public class HttpEncodingAutoConfiguration {
+    // 与SpringBoot的配置文件映射
+    private final HttpEncodingProperties properties;
+
+    // 有参构造函数，参数的值就从容器中拿
+	public HttpEncodingAutoConfiguration(HttpEncodingProperties properties) {
+		this.properties = properties;
+	}
+    
+    @Bean // 给容器中添加一个组件，且该组件的某些属性需从properties中获取
+	@ConditionalOnMissingBean(CharacterEncodingFilter.class)
+	public CharacterEncodingFilter characterEncodingFilter() {
+		CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
+		filter.setEncoding(this.properties.getCharset().name());
+		filter.setForceRequestEncoding(this.properties.shouldForce(Type.REQUEST));
+		filter.setForceResponseEncoding(this.properties.shouldForce(Type.RESPONSE));
+		return filter;
+	}
+    
+	...
+}
+```
+
+根据当前不同的条件判断配置类是否生效。
+
+5）、所有在配置文件中能配置的属性都在xxxxProperties类中封装；
+
+```java
+@ConfigurationProperties(prefix = "spring.http.encoding")// 从配置文件中获取指定的值和bean的属性进行绑定
+public class HttpEncodingProperties {
+    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+    	...
+}
+```
+
+##### 精髓
+
+1）、SpringBoot启动时会加载大量的自动配置类；
+
+2）、开发功能前查看SpringBoot是否已配置好默认的自动配置类；
+
+3）、根据配置类对应的properties类中属性，指定属性值。
+
+
+
+xxxxAutoConfigurartion：自动配置类；给容器中添加组件
+
+xxxxProperties:封装配置文件中相关属性；
