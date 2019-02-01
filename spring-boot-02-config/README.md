@@ -451,7 +451,7 @@ java -jar spring-boot-02-config-02-0.0.1-SNAPSHOT.jar --server.port=8087  --serv
 
 3）、每一个自动配置类进行自动配置功能；
 
-4）、以**HttpEncodingAutoConfiguration（Http编码自动配置）**为例解释自动配置原理；
+4）、以 **HttpEncodingAutoConfiguration（Http编码自动配置）** 为例解释自动配置原理；
 
 ```java
 @Configuration // 表示这是一个配置类，类似以前的配置文件，给容器中添加组件
