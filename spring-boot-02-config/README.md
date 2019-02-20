@@ -9,8 +9,7 @@ Spring Boot使用一个全局的配置文件
 
 配置文件放在`src/main/resources`目录或者类路径 /config 下
 
-**yml** 是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中
-心，比 json、xml 等更适合做配置文件
+**yml** 是 **YAML**（YAML Ain't Markup Language）语言的文件，以数据为中心，比 json、xml 等更适合做配置文件
 
 http://www.yaml.org/ 参考语法规范
 
@@ -452,7 +451,7 @@ java -jar spring-boot-02-config-02-0.0.1-SNAPSHOT.jar --server.port=8087  --serv
 
 3）、每一个自动配置类进行自动配置功能；
 
-4）、以**HttpEncodingAutoConfiguration（Http编码自动配置）**为例解释自动配置原理；
+4）、以 **HttpEncodingAutoConfiguration（Http编码自动配置）** 为例解释自动配置原理；
 
 ```java
 @Configuration // 表示这是一个配置类，类似以前的配置文件，给容器中添加组件
@@ -517,7 +516,7 @@ xxxxProperties:封装配置文件中相关属性；
 
 作用：必须是@Conditional指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；
 
-| @Conditional扩展注解            | 作用（判断是否满足当前指定条件）                 |
+|@Conditional扩展注解            | 作用（判断是否满足当前指定条件）                 |
 | ------------------------------- | ------------------------------------------------ |
 | @ConditionalOnJava              | 系统的java版本是否符合要求                       |
 | @ConditionalOnBean              | 容器中存在指定Bean；                             |
