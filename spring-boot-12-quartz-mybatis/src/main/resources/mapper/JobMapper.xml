@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tyron.quartz.dao.JobDao">
+    <resultMap id="BaseResultMap" type="com.tyron.quartz.entity.base.ScheduleEntity">
+        <result column="className" property="className"/>
+        <result column="jobName" property="jobName"/>
+        <result column="jobGroup" property="jobGroup"/>
+        <result column="cronExpression" property="cronExpression"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="startTime" property="startTime"/>
+        <result column="prevTime" property="prevTime"/>
+        <result column="nextTime" property="nextTime"/>
+    </resultMap>
+
+    <select id="getJobAndTriggerDetails" resultMap="BaseResultMap">
+        SELECT  qrtz_job_details.JOB_NAME as jobName,qrtz_job_details.JOB_GROUP as jobGroup,
+                 qrtz_job_details.JOB_CLASS_NAME as className,
+                 qrtz_job_details.DESCRIPTION as description,
+                 qrtz_cron_triggers.CRON_EXPRESSION as cronExpression,
+                 qrtz_triggers.START_TIME as startTime,
+                 qrtz_triggers.END_TIME as endTime,
+                 qrtz_triggers.NEXT_FIRE_TIME as nextTime,
+                 qrtz_triggers.PREV_FIRE_TIME as prevTime,
+                 qrtz_triggers.TRIGGER_STATE as status 
+                 FROM qrtz_job_details 
+                 LEFT JOIN qrtz_triggers ON 
+                 qrtz_job_details.JOB_NAME = qrtz_triggers.JOB_NAME 
+                 AND qrtz_job_details.JOB_GROUP = qrtz_triggers.JOB_GROUP 
+                 LEFT JOIN qrtz_cron_triggers ON 
+                 qrtz_triggers.TRIGGER_NAME = qrtz_cron_triggers.TRIGGER_NAME 
+                 AND qrtz_triggers.TRIGGER_GROUP = qrtz_cron_triggers.TRIGGER_GROUP
+        <if test="key != null">
+            <!-- 写like语句的时候 一般都会写成 like '% %' 在mybatis里面写就是应该是 like '%${name} %' 而不是'%#{name} %'
+			${name} 是不带单引号的，而#{name} 是带单引号的 -->
+            WHERE (qrtz_job_details.JOB_NAME like '%${key}%' or qrtz_job_details.JOB_GROUP like '%${key}%')
+        </if>
+        order by qrtz_job_details.JOB_NAME limit #{offset},#{limit};
+    </select>
+
+    <select id="getJobCount" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM
+        qrtz_job_details
+        <if test="key != null">
+            WHERE (JOB_NAME like '%${key}%' or JOB_GROUP like '%${key}%')
+        </if>
+    </select>
+
+    <update id="updateJob">
+        update qrtz_job_details set DESCRIPTION = #{description} where JOB_NAME = #{jobName} and JOB_GROUP = #{jobGroup}
+    </update>
+</mapper>

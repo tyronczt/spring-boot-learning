@@ -1,0 +1,451 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="stylesheet" type="text/css" href="resources/lib/animate.css"/>
+    <link rel="stylesheet" type="text/css" href="resources/lib/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="resources/lib/bootstrap/bootstrap-table.css"/>
+    <link rel="stylesheet" type="text/css" href="resources/lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" type="text/css" href="resources/lib/growl/jquery.growl.css">
+    <link rel="stylesheet" type="text/css" href="resources/css/style.css">
+    <title>定时任务调度中心</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+</head>
+<body>
+<!-- Header-->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">
+                Walle-Quartz
+            </a>
+        </div>
+        <!--<div class="navbar-collapse">-->
+            <!--<div class="dropdown">-->
+                <!--<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">-->
+                    <!--文档-->
+                <!--</button>-->
+                <!--<div class="dropdown-menu dropdown-menu-right">-->
+                    <!--<a class="dropdown-item" href="/swagger-ui.html">接口文档</a>-->
+                    <!--<a class="dropdown-item" href="/reference.html">用户手册</a>-->
+                    <!--<a class="dropdown-item" href="/version.html">版本说明</a>-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    </div>
+</nav>
+<!-- End header-->
+
+<section class="content">
+    <div class="table-responsive">
+        <div id="toolbar">
+            <button id="add" class="btn btn-primary" data-toggle="modal" data-target="#createModal">
+                <i class="fa fa-plus"> 新增</i>
+            </button>
+        </div>
+        <table id="table"
+               data-toolbar="#toolbar"
+               data-search="true"
+               data-show-refresh="true"
+               data-show-columns="true"
+               data-show-export="true"
+               data-pagination="true"
+               data-id-field="id"
+               data-show-footer="false"
+               data-cache="false"
+               data-sortable="false">
+        </table>
+    </div>
+
+</section>
+<!-- 模态框 -->
+<div class="modal  fade" id="deleteModal">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">注销确认</h4>
+                <button type="button" class="close" data-dismiss="modal" onclick="cancelDelete()">&times;</button>
+            </div>
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                确认注销此任务吗？<br>
+                注销动作将从数据库中删除此任务注册信息。
+            </div>
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteRow()">确认</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="cancelDelete()">取消</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 模态框 -->
+<div class="modal  fade" id="createModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">任务注册</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                <form action="/quartz/create" method="post">
+                    <div class="form-group">
+                        <label for="jobName">任务名称 *:</label>
+                        <input type="text" class="form-control" id="jobName" placeholder="任务名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="jobGroup">任务分组 *:</label>
+                        <input type="text" class="form-control" id="jobGroup" placeholder="任务分组">
+                    </div>
+                    <div class="form-group">
+                        <label for="className">任务执行类名 *:</label>
+                        <input type="text" class="form-control" id="className" placeholder="执行任务的类，包括完整包路径">
+                    </div>
+                    <div class="form-group">
+                        <label for="cronExpression">cron表达式 *:</label>
+                        <input type="text" class="form-control" id="cronExpression" placeholder="cron表达式">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">任务简要描述:</label>
+                        <textarea rows="3" class="form-control" id="description" placeholder="任务描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" onclick="create()">提交</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="cancelDelete()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模态框 -->
+<div class="modal  fade" id="updateModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">任务注册</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                <form action="/quartz/create" method="post">
+                    <div class="form-group">
+                        <label>任务名称:</label>
+                        <label class="form-control" id="jobNameU"></label>
+                    </div>
+                    <div class="form-group">
+                        <label>任务分组:</label>
+                        <label class="form-control" id="jobGroupU"></label>
+                    </div>
+                    <div class="form-group">
+                        <label for="className">任务执行类名:</label>
+                        <label class="form-control" id="classNameU"></label>
+                    </div>
+                    <div class="form-group">
+                        <label for="cronExpression">cron表达式 *:</label>
+                        <input type="text" class="form-control" id="cronExpressionU" placeholder="cron表达式">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">任务简要描述:</label>
+                        <textarea rows="3" class="form-control" id="descriptionU" placeholder="任务描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" onclick="update()">保存</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="cancelDelete()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="resources/lib/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="resources/lib/bootstrap/popper.min.js"></script>
+<script type="text/javascript" src="resources/lib/bootstrap/bootstrap.min.js"></script>
+<script type="text/javascript" src="resources/lib/tableExport.js"></script>
+<script type="text/javascript" src="resources/lib/bootstrap/bootstrap-table.js"></script>
+<script type="text/javascript"
+        src="resources/lib/bootstrap/extensions/auto-refresh/bootstrap-table-auto-refresh.js"></script>
+<script type="text/javascript" src="resources/lib/bootstrap/extensions/export/bootstrap-table-export.js"></script>
+<script type="text/javascript" src="resources/lib/bootstrap/locale/bootstrap-table-zh-CN.js"></script>
+<script type="text/javascript" src="resources/lib/growl/jquery.growl.js"></script>
+<script>
+    var rowTemp = null;
+    var operateEvents = {
+        'click .pause': function (e, value, row, index) {
+            excuteGet(row.jobGroup, row.jobName, "pause");
+        },
+
+        'click .resume': function (e, value, row, index) {
+            excuteGet(row.jobGroup, row.jobName, "resume");
+        },
+
+        'click .delete': function (e, value, row, index) {
+            rowTemp = row;
+            $("#deleteModal").modal("show");
+        },
+
+        'click .update': function (e, value, row, index) {
+            $("#jobNameU").html(row.jobName);
+            $("#jobGroupU").html(row.jobGroup);
+            $("#classNameU").html(row.className);
+            $("#cronExpressionU").val(row.cronExpression);
+            $("#descriptionU").val(row.description);
+            $("#updateModal").modal("show");
+        },
+
+        'click .runOnce': function (e, value, row, index) {
+            excuteGet(row.jobGroup, row.jobName, "runOnceNow");
+        }
+    };
+
+
+    $('#table').bootstrapTable({
+        url: "/quartz/list",
+        method: "GET",
+        pageNumber: 1,
+        pageSize: 10,
+        pageList: [10, 25, 50, 100, "ALL"],
+        sidePagination: "server",     //分页方式：client客户端分页，server服务端分页（*）
+        autoRefresh: true,
+        autoRefreshInterval: 1,
+        columns: [
+            {
+                field: "jobGroup",
+                title: "任务组"
+            },
+            {
+                field: "jobName",
+                title: "任务名"
+            },
+            {
+                field: "cronExpression",
+                title: "cron表达式"
+            },
+            {
+                field: "status",
+                title: "状态",
+                formatter: statusFormatter
+            },
+            {
+                field: "className",
+                title: "任务执行类名"
+            },
+            {
+                field: "description",
+                title: "描述"
+            },
+            {
+                field: "startTime",
+                title: "任务注册时间",
+                formatter: timeFormatter
+            },
+            {
+                field: "prevTime",
+                title: "上次执行时间",
+                formatter: timeFormatter
+            },
+            {
+                field: "nextTime",
+                title: "下次执行时间",
+                formatter: timeFormatter
+            },
+            {
+                field: "operate",
+                title: "操作",
+                align: 'center',
+                events: operateEvents,
+                formatter: operateFormatter //自定义方法，添加操作按钮
+            }
+        ],
+    });
+
+    function operateFormatter(value, row, index) {//赋予的参数
+        return ['<div class="btn-group">',
+            '<button class="btn btn-primary m-l-sm pause" title="暂停调度"><i class="fa fa-pause-circle-o" ></i></button>',
+            '<button class="btn btn-primary m-l-sm resume" title="恢复调度"><i class="fa fa-play-circle-o" ></i></button>',
+            '<button class="btn btn-primary m-l-sm delete" title="注销任务"><i class="fa fa-trash" ></i></button>',
+            '<button class="btn btn-primary m-l-sm update" title="修改cron表达式或描述" ><i class="fa fa-pencil-square-o" ></i></button>',
+            '<button class="btn btn-primary m-l-sm runOnce" title="立即生成一条临时任务并执行，执行完毕后删除临时任务" ><i class="fa fa-play" ></i></button>',
+            '</div>'
+        ].join('');
+    };
+
+    function statusFormatter(value, row, index) {//赋予的参数
+        switch (value) {
+            case "PAUSED":
+            case "PAUSED_BLOCKED":
+                return "暂停调度";
+            case "COMPLETE":
+                return "结束调度";
+            case "ACQUIRED":
+            case "EXECUTING":
+            case "BLOCKED":
+                return "正在执行";
+            case "DELETED":
+                return "已删除";
+            case "WAITING":
+                return "等待触发";
+            default:
+                return "正常";
+        }
+    };
+
+    function timeFormatter(value) {
+        var date = new Date(value);
+        var y = date.getFullYear();
+        var m = date.getMonth() + 1;
+        m = m < 10 ? ('0' + m) : m;
+        var d = date.getDate();
+        d = d < 10 ? ('0' + d) : d;
+        var h = date.getHours();
+        h = h < 10 ? ('0' + h) : h;
+        var minute = date.getMinutes();
+        var second = date.getSeconds();
+        minute = minute < 10 ? ('0' + minute) : minute;
+        second = second < 10 ? ('0' + second) : second;
+        return y + '-' + m + '-' + d + ' ' + h + ':' + minute + ':' + second;
+    };
+
+    function cancelDelete() {
+        rowTemp = null;
+    };
+
+    function deleteRow() {
+        excuteGet(rowTemp.jobGroup, rowTemp.jobName, "delete");
+        rowTemp = null;
+        $("#deleteModal").modal("hide");
+    };
+
+    function excuteGet(jobGroup, jobName, operation) {
+        var url = "/quartz/" + operation + "?jobGroup=" + jobGroup + "&jobName=" + jobName;
+        $.ajax({
+            url: url,
+            success: function (data) {
+                if (data.status == "200") {
+                    $('#table').bootstrapTable('refresh', {silent: true});
+                    $.growl.notice({
+                        title: "",
+                        message: data.message
+                    });
+                } else {
+                    $.growl.error({
+                        title: "",
+                        message: data.message
+                    });
+                }
+            },
+            error: function (data) {
+                $.growl.error({
+                    title: "",
+                    message: data.responseJSON.message
+                });
+            }
+        });
+
+    };
+
+    String.prototype.trim = function () {
+        return this.replace(/(^\s*)|(\s*$)/g, "");
+    };
+
+    function create() {
+        var job = {
+            jobName: $("#jobName").val().trim(),
+            jobGroup: $("#jobGroup").val().trim(),
+            className: $("#className").val().trim(),
+            cronExpression: $("#cronExpression").val().trim(),
+            description: $("#description").val(),
+        };
+        if (!job.jobName || !job.jobGroup || !job.className || !job.cronExpression) {
+            $.growl.error({
+                title: "",
+                message: "带 * 号的为必填项，请检查输入"
+            });
+            return false;
+        }
+        ;
+        $.ajax({
+            url: "/quartz/create",
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            data: JSON.stringify(job),
+            success: function (data) {
+                if (data.status == "200") {
+                    $('#table').bootstrapTable('refresh', {silent: true});
+                    $.growl.notice({
+                        title: "",
+                        message: data.message
+                    });
+                    $("#createModal").modal("hide");
+                    $("#jobName").val("");
+                    $("#jobGroup").val("");
+                    $("#className").val("");
+                    $("#cronExpression").val("");
+                    $("#description").val("");
+                } else {
+                    $.growl.error({
+                        title: "",
+                        message: data.message
+                    });
+                }
+            },
+            error: function (data) {
+                $.growl.error({
+                    title: "",
+                    message: data.responseJSON.message
+                });
+            }
+        });
+    };
+
+    function update() {
+        var url = "/quartz/update?jobName=" + $("#jobNameU").html() +
+            "&jobGroup=" + $("#jobGroupU").html() +
+            "&cronExpression=" + $("#cronExpressionU").val().trim() +
+            "&description=" + $("#descriptionU").val().trim();
+        $.ajax({
+            url: url,
+            success: function (data) {
+                if (data.status == "200") {
+                    $('#table').bootstrapTable('refresh', {silent: true});
+                    $.growl.notice({
+                        title: "",
+                        message: data.message
+                    });
+                    $("#updateModal").modal("hide");
+                } else {
+                    $.growl.error({
+                        title: "",
+                        message: data.message
+                    });
+                }
+            },
+            error: function (data) {
+                $.growl.error({
+                    title: "",
+                    message: data.responseJSON.message
+                });
+            }
+        });
+
+    };
+</script>
+</body>
+</html>
