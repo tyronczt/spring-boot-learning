@@ -1,7 +1,7 @@
 # Spring Boot与日志  
 
 #### 日志框架、日志配置 
-@[TOC]
+
 ### 一、日志框架
 
 市场上存在非常多的日志框架。 JUL（java.util.logging），JCL（Apache Commons Logging），Log4j，Log4j2，<u>Logback</u>、 <u>SLF4j</u>、 jboss-logging等。
