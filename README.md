@@ -6,7 +6,7 @@
 
 二、[Spring Boot 配置](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-02-config)
 
-三、Spring Boot 与日志
+三、[Spring Boot 与日志](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-03-logging)
 
 四、Spring Boot 与Web开发
 
