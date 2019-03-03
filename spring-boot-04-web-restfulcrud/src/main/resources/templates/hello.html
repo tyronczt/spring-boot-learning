@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+</head>
+<body>
+<h1>hello</h1>
+<div th:text="${name}"></div>
+<div th:utext="${name}"></div>
+<!--第一种遍历方式：th:each会遍历三次h3 -->
+<h3 th:each="n : ${names}">
+    <div th:text="${n}"></div>
+</h3>
+<!--第二种遍历方式：th:each会遍历一次h3，行内显示 -->
+<h3>
+    <span th:each="n:${names}">[[${n}]]</span>
+</h3>
+
+</body>
+</html>
