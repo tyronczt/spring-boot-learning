@@ -649,11 +649,15 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
 
 2）、将拦截器注入，并设置相应规则
 
+注意添加：`"/asserts/**"`,`"/webjars/**"` 
+
+**SpringBoot 2.x的如果自定义HandlerInterceptor拦截器时访问静态资源就会被同步拦截，需要手动去除拦截**
+
 ```java
 @Override
-public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**").excludePathPatterns("/index.html","/user/login","/");
-}
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**").excludePathPatterns("/index.html","/","/user/login","/asserts/**","/webjars/**");
+    }
 ```
 
 #### 4.5、CRUD-员工列表
@@ -681,4 +685,62 @@ URI：  /资源名称/资源标识       HTTP请求方式区分对资源CRUD操�
 | 添加员工     | emp      | POS      |
 | 修改员工     | emp      | PUT      |
 | 删除员工     | emp/{id} | DELETE   |
+
+#### 4.6、公共页提取
+
+1）、抽取公共片段
+
+```html
+<div th:fragment="copy">    
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+```
+
+2）、引入公共片段
+
+```html
+<div th:insert="~{footer :: copy}"></div>
+~{templatename::fragmentname} 模板名::片段名 like in the ~{footer :: copy} above
+~{templatename::selector} 模板名:: 选择器
+```
+
+3）、显示效果
+
+insert的功能片段显示在div内
+
+如果使用th:insert等属性进行引入，可以不用写~{}：
+
+行内写法要加上：[[~{}]]; [(~{})]；
+
+4）、三种引入方式
+
+- **th:insert** is the simplest: it will simply insert the specified fragment as the body of its host tag.
+- **th:replace** actually replaces its host tag with the specified fragment.
+- **th:include** is similar to th:insert , but instead of inserting the fragment it only inserts the contents of this fragment.
+
+```html
+<footer th:fragment="copy">
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+引入方式
+<div th:insert="footer :: copy"></div>
+<div th:replace="footer :: copy"></div>
+<div th:include="footer :: copy"></div>
+
+效果
+<div>
+    <footer>
+    &copy; 2011 The Good Thymes Virtual Grocery
+    </footer>
+</div>
+
+<footer>
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+<div>
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+```
 
