@@ -8,7 +8,7 @@
 
 三、[Spring Boot 与日志](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-03-logging)
 
-四、Spring Boot 与Web开发
+四、[Spring Boot 与Web开发](https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-04-web-restfulcrud)
 
 五、Spring Boot 与Docker
 
