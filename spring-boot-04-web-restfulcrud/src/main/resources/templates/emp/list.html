@@ -76,13 +76,21 @@
 									<td th:text="${#dates.format(emp.birth, 'yyyy-MM-dd HH:mm')}"></td>
 									<td>
 										<a class="btn btn-sm btn-primary" th:href="@{/emp/}+${emp.id}">编辑</a>
-										<button class="btn btn-sm btn-danger">删除</button>
+										<!--<form th:action="@{/emp/}+${emp.id}" method="post">
+											<input type="hidden" name="_method" value="delete"/>
+											<button type="submit" class="btn btn-sm btn-danger">删除</button>
+										</form>-->
+										<!--修改成一个表单，通过jquery提交-->
+										<button th:attr="del_uri=@{/emp/}+${emp.id}" class="btn btn-sm btn-danger deleteBtn">删除</button>
 									</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 				</main>
+				<form id="deleteEmpForm" method="post">
+					<input type="hidden" name="_method" value="delete"/>
+				</form>
 			</div>
 		</div>
 
@@ -130,7 +138,12 @@
 				}
 			});
 		</script>
-
+		<script>
+			$(".deleteBtn").click(function () {
+				$("#deleteEmpForm").attr("action",$(this).attr("del_uri")).submit();
+				return false;// 取消按钮的默认行为
+			})
+		</script>
 	</body>
 
 </html>

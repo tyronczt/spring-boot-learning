@@ -744,3 +744,195 @@ insert的功能片段显示在div内
 </div>
 ```
 
+#### 4.7、添加员工
+
+```java
+/**
+  * 添加页面
+  *
+  * @param model 页面显示参数
+  * @return 添加页
+  */
+@GetMapping("/emp/add")
+public String addPage(Model model) {
+    // 获取部门列表
+    Collection<Department> departments = departmentDao.getDepartments();
+    model.addAttribute("depts", departments);
+    return "emp/add";
+}
+
+/**
+ * 添加请求
+ *
+ * @param employee 员工实体
+ * @return 员工列表页
+ */
+@PostMapping("/emp")
+public String addEmp(Employee employee) {
+    System.out.println(employee);
+    // 添加
+    employeeDao.save(employee);
+    return "redirect:/emps";
+}
+```
+
+```html
+添加页面
+
+<!--引入 topbar-->
+<div th:replace="commons/bar :: topbar"></div>
+
+<div class="container-fluid">
+   <div class="row">
+      <!--引入侧边栏-->
+      <div th:replace="commons/bar :: #sidebar(activeUri='emps')"></div>
+
+      <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+         <form th:action="@{/emp}" method="post">
+            <div class="form-group">
+               <label>LastName</label>
+               <input type="text" name="lastName" class="form-control" placeholder="zhangsan">
+            </div>
+            <div class="form-group">
+               <label>Email</label>
+               <input type="email" name="email" class="form-control" placeholder="zhangsan@atguigu.com">
+            </div>
+            <div class="form-group">
+               <label>Gender</label><br/>
+               <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="gender"  value="1">
+                  <label class="form-check-label">男</label>
+               </div>
+               <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="gender"  value="0">
+                  <label class="form-check-label">女</label>
+               </div>
+            </div>
+            <div class="form-group">
+               <label>department</label>
+               <select class="form-control" name="department.id">
+                  <option th:value="${dept.id}" th:each="dept : ${depts}" th:text="${dept.departmentName}">1</option>
+               </select>
+            </div>
+            <div class="form-group">
+               <label>Birth</label>
+               <input type="text" name="birth" class="form-control" placeholder="zhangsan">
+            </div>
+            <button type="submit" class="btn btn-primary">添加</button>
+         </form>
+      </main>
+   </div>
+</div>
+```
+
+#### 4.8、修改员工
+
+```java
+/**
+ * 修改页面（同添加页面）
+ *
+ * @param model 页面显示参数
+ * @return 页面
+ */
+@GetMapping("/emp/{id}")
+public String modifyPage(@PathVariable("id") Integer id, Model model) {
+    // 获取部门列表
+    Collection<Department> departments = departmentDao.getDepartments();
+    model.addAttribute("depts", departments);
+    // 获取原信息
+    Employee employee = employeeDao.get(id);
+    model.addAttribute("emp", employee);
+    return "emp/edit";
+}
+
+/**
+ * 修改操作
+ *
+ * @param employee 员工信息
+ * @return 员工列表页
+ */
+@PutMapping("emp")
+public String editEmp(Employee employee) {
+    System.out.println(employee);
+    employeeDao.save(employee);
+    return "redirect:/emps";
+}
+```
+
+添加页面和删除页面同用一个页面，在属性中增加非空判断
+
+```html
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+            <form th:action="@{/emp}" method="post">
+                <!--发送put请求修改员工数据，由springboot配置的HiddenHttpMethodFilter处理
+                    创建input项，name="_method"；值就是我们指定的请求方式-->
+                <input type="hidden" name="_method" value="put" th:if="${emp!=null}"/>
+                <input type="hidden" name="id" th:if="${emp!=null}" th:value="${emp.id}">
+                <div class="form-group">
+                    <label>LastName</label>
+                    <input type="text" name="lastName" class="form-control" placeholder="zhangsan" th:value="${emp!=null}?${emp.lastName}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="zhangsan@atguigu.com" th:value="${emp!=null}?${emp.email}">
+                </div>
+                <div class="form-group">
+                    <label>Gender</label><br/>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" value="1" th:checked="${emp!=null}?${emp.gender==1}">
+                        <label class="form-check-label">男</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" value="0" th:checked="${emp!=null}?${emp.gender==0}">
+                        <label class="form-check-label">女</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>department</label>
+                    <select class="form-control" name="department.id">
+                        <option th:value="${dept.id}" th:each="dept : ${depts}" th:text="${dept.departmentName}" th:selected="${emp!=null}?${dept.id == emp.department.id}">1
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Birth</label>
+                    <input name="birth" type="text" class="form-control" placeholder="zhangsan" th:value="${emp!=null}?${#dates.format(emp.birth, 'yyyy-MM-dd HH:mm')}">
+                </div>
+                <button type="submit" class="btn btn-primary" th:text="${emp!=null}?'修改':'添加'">添加</button>
+            </form>
+        </main>
+    </div>
+</div>
+```
+
+#### 4.9、员工删除
+
+```java
+/**
+ * 删除员工
+ *
+ * @param id 员工id
+ * @return 员工列表页
+ */
+@DeleteMapping("emp/{id}")
+public String deleteEmp(@PathVariable("id") Integer id) {
+    employeeDao.delete(id);
+    return "redirect:/emps";
+}
+```
+
+```html
+<!--修改成一个表单，通过jquery提交-->
+<button th:attr="del_uri=@{/emp/}+${emp.id}" class="btn btn-sm btn-danger deleteBtn">删除</button>
+
+<form id="deleteEmpForm" method="post">
+    <input type="hidden" name="_method" value="delete"/>
+</form>
+
+<script>
+    $(".deleteBtn").click(function () {
+        $("#deleteEmpForm").attr("action",$(this).attr("del_uri")).submit();
+        return false;// 取消按钮的默认行为
+    })
+</script>
+```
