@@ -936,3 +936,174 @@ public String deleteEmp(@PathVariable("id") Integer id) {
     })
 </script>
 ```
+
+### 五、错误处理机制
+
+#### 5.1、SpringBoot默认的错误处理机制
+
+1）、浏览器访问，返回一个默认的错误页面：
+
+![error page](https://raw.githubusercontent.com/tyronczt/spring-boot-learning/master/images/spring-boot-web-error-01.png)
+
+2）、其他客户端访问，默认返回json数据：
+
+```json
+{
+    "timestamp": "2019-03-07T14:15:38.625+0000",
+    "status": 404,
+    "error": "Not Found",
+    "message": "No message available",
+    "path": "/crud/aaa"
+}
+```
+
+原理分析（步骤）：
+
+系统出现4xx或5xx之类的错误后，**ErrorPageCustomizer**就会生效（定制错误的响应规则）；就会来到/error请求；被**BasicErrorController**处理；
+
+参照org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration，错误处理自动配置，并在容器中添加以下组件：
+
+- ErrorPageCustomizer： **错误页面定制器**
+
+```java
+// bean注入
+@Bean
+public ErrorPageCustomizer errorPageCustomizer() {
+		return new ErrorPageCustomizer(this.serverProperties, this.dispatcherServletPath);
+}
+// 主要方法
+@Override
+public void registerErrorPages(ErrorPageRegistry errorPageRegistry) {
+    ErrorPage errorPage = new ErrorPage(this.dispatcherServletPath
+                               .getRelativePath(this.properties.getError().getPath()));
+    errorPageRegistry.addErrorPages(errorPage);
+}
+
+// 注册error页面，而页面的请求路径由getPath方法返回,所以当系统出现错误以后，会来到error请求进行处理。
+public String getPath() {
+    return this.path;
+}
+@Value("${error.path:/error}")
+private String path = "/error";
+```
+
+- BasicErrorController：**错误控制器** 处理默认/error请求
+
+```java
+@Bean
+	@ConditionalOnMissingBean(value = ErrorController.class, search = SearchStrategy.CURRENT)
+	public BasicErrorController basicErrorController(ErrorAttributes errorAttributes) {
+		return new BasicErrorController(errorAttributes, this.serverProperties.getError(),
+				this.errorViewResolvers);
+	}
+```
+
+```java
+@Controller
+@RequestMapping("${server.error.path:${error.path:/error}}")
+public class BasicErrorController extends AbstractErrorController {
+
+   @RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
+   // public static final String TEXT_HTML_VALUE = "text/html";
+   // 浏览器发送的请求头为："text/html"
+   public ModelAndView errorHtml(HttpServletRequest request,
+         HttpServletResponse response) {
+      HttpStatus status = getStatus(request);
+      //getErrorAttributes 根据错误信息来封装一些model数据，用于页面显示
+      Map<String, Object> model = Collections.unmodifiableMap(getErrorAttributes(
+            request, isIncludeStackTrace(request, MediaType.TEXT_HTML)));
+      response.setStatus(status.value());
+    
+      //返回错误页面，包含页面地址和页面内容
+      ModelAndView modelAndView = resolveErrorView(request, response, status, model);
+      return (modelAndView != null) ? modelAndView : new ModelAndView("error", model);
+   }
+
+   // 其他客户端请求，由此方法处理
+   @RequestMapping
+   public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
+      Map<String, Object> body = getErrorAttributes(request,
+            isIncludeStackTrace(request, MediaType.ALL));
+      HttpStatus status = getStatus(request);
+      return new ResponseEntity<>(body, status);
+   }
+}
+
+protected ModelAndView resolveErrorView(HttpServletRequest request,
+			HttpServletResponse response, HttpStatus status, Map<String, Object> model) {
+ //获取所有的视图解析器来处理这个错误信息，而这个 errorViewResolvers 对象其实就是DefaultErrorViewResolver对象的集合
+		for (ErrorViewResolver resolver : this.errorViewResolvers) {
+			ModelAndView modelAndView = resolver.resolveErrorView(request, status, model);
+			if (modelAndView != null) {
+				return modelAndView;
+			}
+		}
+		return null;
+	}
+```
+
+- DefaultErrorViewResolver：**默认错误视图处理器**
+
+```java
+@Bean
+@ConditionalOnBean(DispatcherServlet.class)
+@ConditionalOnMissingBean
+public DefaultErrorViewResolver conventionErrorViewResolver() {
+    return new DefaultErrorViewResolver(this.applicationContext,
+                                        this.resourceProperties);
+}
+```
+
+DefaultErrorViewResolver定义类
+
+```java
+public class DefaultErrorViewResolver implements ErrorViewResolver, Ordered {
+
+   private static final Map<Series, String> SERIES_VIEWS;
+
+   static {
+      Map<Series, String> views = new EnumMap<>(Series.class);
+      views.put(Series.CLIENT_ERROR, "4xx");
+      views.put(Series.SERVER_ERROR, "5xx");
+      SERIES_VIEWS = Collections.unmodifiableMap(views);
+   }
+    
+	private ModelAndView resolve(String viewName, Map<String, Object> model) {
+        //错误页面：error/400，或者error/404，或者error/500...
+		String errorViewName = "error/" + viewName;
+        //模版引擎可以解析到这个页面地址就用模版引擎来解析
+		TemplateAvailabilityProvider provider = this.templateAvailabilityProviders
+				.getProvider(errorViewName, this.applicationContext);
+		if (provider != null) {
+            //模版引擎可用的情况下返回到errorViewName指定的视图
+			return new ModelAndView(errorViewName, model);
+		}
+        //模版引擎不可用的情况下，在静态资源文件夹下查找errorViewName对应的页面
+		return resolveResource(errorViewName, model);
+	}
+
+	private ModelAndView resolveResource(String viewName, Map<String, Object> model) {
+		for (String location : this.resourceProperties.getStaticLocations()) {
+			try {
+                //从静态资源文件中查找errorViewName对应的页面
+				Resource resource = this.applicationContext.getResource(location);
+				resource = resource.createRelative(viewName + ".html");
+				if (resource.exists()) {
+					return new ModelAndView(new HtmlResourceView(resource), model);
+				}
+			}
+			catch (Exception ex) {
+			}
+		}
+		return null;
+	}
+```
+
+https://blog.csdn.net/caychen/article/details/80274477
+
+#### 5.2、定制错误响应
+
+
+
+
+
