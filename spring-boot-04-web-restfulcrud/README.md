@@ -959,7 +959,7 @@ public String deleteEmp(@PathVariable("id") Integer id) {
 
 原理分析（步骤）：
 
-系统出现4xx或5xx之类的错误后，**ErrorPageCustomizer**就会生效（定制错误的响应规则）；就会来到/error请求；被**BasicErrorController**处理；
+系统出现4xx或5xx之类的错误后，**ErrorPageCustomizer**就会生效（定制错误的响应规则）；就会来到/error请求；被**BasicErrorController**处理，根据请求方式不同交由**ErrorViewResolver**（接口，实现类是**DefaultErrorViewResolver**），在有模板引擎的情况下访问error文件夹下的指定错误码页面，否则直接访问静态资源路径下的错误页面。
 
 参照org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration，错误处理自动配置，并在容器中添加以下组件：
 
@@ -1068,6 +1068,18 @@ public class DefaultErrorViewResolver implements ErrorViewResolver, Ordered {
       SERIES_VIEWS = Collections.unmodifiableMap(views);
    }
     
+    @Override
+	public ModelAndView resolveErrorView(HttpServletRequest request, HttpStatus status,
+			Map<String, Object> model) {
+        // 先以错误状态码作为错误页面名
+		ModelAndView modelAndView = resolve(String.valueOf(status.value()), model);
+        // 如果无法处理，则使用4xx或者5xx作为错误页面名
+		if (modelAndView == null && SERIES_VIEWS.containsKey(status.series())) {
+			modelAndView = resolve(SERIES_VIEWS.get(status.series()), model);
+		}
+		return modelAndView;
+	}
+    
 	private ModelAndView resolve(String viewName, Map<String, Object> model) {
         //错误页面：error/400，或者error/404，或者error/500...
 		String errorViewName = "error/" + viewName;
@@ -1099,11 +1111,115 @@ public class DefaultErrorViewResolver implements ErrorViewResolver, Ordered {
 	}
 ```
 
-https://blog.csdn.net/caychen/article/details/80274477
+- DefaultErrorAttributes：默认错误页面属性
 
-#### 5.2、定制错误响应
+```java
+@Bean
+@ConditionalOnMissingBean(value = ErrorAttributes.class, search = SearchStrategy.CURRENT)
+public DefaultErrorAttributes errorAttributes() {
+   return new DefaultErrorAttributes();
+}
 
+@Override
+public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes,
+                                              boolean includeStackTrace) {
+    Map<String, Object> errorAttributes = new LinkedHashMap<String, Object>();
+    errorAttributes.put("timestamp", new Date());
+    addStatus(errorAttributes, requestAttributes);
+    addErrorDetails(errorAttributes, requestAttributes, includeStackTrace);
+    addPath(errorAttributes, requestAttributes);
+    return errorAttributes;
+}
 
+页面设置属性：
+timestamp： 时间戳
+status：状态码
+error：错误提示
+exception：异常对象
+message：异常消息
+errors：JSR303数据校验的所有错误
+```
 
+#### 5.2、定制错误响应页面
 
+1）、存在模板引擎，会在模板引擎文件夹下的error文件夹下查找指定状态码的视图；
 
+可以使用4xx和5xx作为错误文件，匹配该类型的所有错误，精确匹配优先。
+
+2）、未找到模板引擎（或模板引擎文件夹下未找到error文件夹），会在静态资源文件夹下找；
+
+3）、模板引擎文件夹和静态资源文件夹下均没有错误页面时，会使用SpringBoot默认错误页面。
+
+```java
+// 默认错误页面bean
+private final SpelView defaultErrorView = new SpelView(
+      "<html><body><h1>Whitelabel Error Page</h1>"
+            + "<p>This application has no explicit mapping for /error, so you are seeing this as a fallback.</p>"
+            + "<div id='created'>${timestamp}</div>"
+            + "<div>There was an unexpected error (type=${error}, status=${status}).</div>"
+            + "<div>${message}</div></body></html>");
+
+@Bean(name = "error")
+@ConditionalOnMissingBean(name = "error")
+public View defaultErrorView() {
+   return this.defaultErrorView;
+}
+```
+
+#### 5.3、定制错误json数据
+
+```java
+@ControllerAdvice
+public class MyExceptionHandler {
+
+    @ResponseBody
+    @ExceptionHandler(UserNotExistException.class)
+    public Map<String, Object> handException(Exception e) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("code","user not exist");
+        map.put("msg",e.getMessage());
+        return  map;
+    }
+}
+// 未实现自定义效果，浏览器和其他客户端访问都是json数据
+```
+
+实现自定义效果，需要将错误结果转发到默认的/error请求进行解析，同时还需要带上错误码（否则都是200）
+
+```java
+@ExceptionHandler(UserNotExistException.class)
+    public String handException(Exception e, HttpServletRequest request) {
+        
+        request.setAttribute("javax.servlet.error.status_code",400);
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", "user not exist");
+        map.put("msg", e.getMessage());
+        // 将错误提示设值到request中
+        request.setAttribute("ext", map);
+        // 转发到默认的BasicErrorController /error请求中
+        return "forward:/error";
+    }
+
+protected HttpStatus getStatus(HttpServletRequest request) {
+  	Integer statusCode = (Integer) request
+         .getAttribute("javax.servlet.error.status_code");
+```
+
+实现自定义属性的功能：由于error方法设置属性时都调用DefaultErrorAttributes的getErrorAttributes()方法，所以只要继承DefaultErrorAttributes，重写getErrorAttributes方法，将自己的属性放入即可。
+
+```java
+@Component
+public class MyErrorAttributes extends DefaultErrorAttributes {
+
+    @Override
+    public Map<String, Object> getErrorAttributes(WebRequest webRequest, boolean includeStackTrace) {
+        Map<String, Object> map = super.getErrorAttributes(webRequest, includeStackTrace);
+        map.put("author", "tyron");
+        // 从request中获取自定义的错误提示
+        Object ext = webRequest.getAttribute("ext", 0);
+        map.put("ext", ext);
+        return map;
+    }
+```
+
+最终效果：自适应的响应和自定义的错误内容。

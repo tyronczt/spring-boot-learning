@@ -30,11 +30,11 @@ public class MyMvcConfig implements WebMvcConfigurer {
         registry.addViewController("main.html").setViewName("dashboard");
     }
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**").excludePathPatterns("/index.html","/","/user/login",
-                "/asserts/**","/webjars/**");
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**").excludePathPatterns("/index.html","/","/user/login",
+//                "/asserts/**","/webjars/**");
+//    }
 
     //    //所有的WebMvcConfigurerAdapter组件都会一起起作用
 //    @Bean //将组件注册在容器
