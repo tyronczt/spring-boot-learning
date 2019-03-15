@@ -2,6 +2,9 @@ package com.tyron.springboot.config;
 
 import com.tyron.springboot.component.LoginHandlerInterceptor;
 import com.tyron.springboot.component.MyLocaleResolver;
+import org.springframework.boot.autoconfigure.web.embedded.EmbeddedWebServerFactoryCustomizerAutoConfiguration;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
