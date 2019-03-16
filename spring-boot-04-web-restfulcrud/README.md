@@ -200,27 +200,7 @@ th:text；改变当前元素里面的文本内容；
 
 th：任意html属性；来替换原生属性的值
 
-| Order | Feature                         | Attributes                         |
-| ----- | ------------------------------- | ---------------------------------- |
-| 1     | Fragment inclusion              | th:insert
-th:replace                |
-| 2     | Fragment iteration              | th:each                            |
-| 3     | Conditional evaluation          | th:if
-th:unless
-th:switch
-th:case     |
-| 4     | Local variable definition       | th:object
-th:with                   |
-| 5     | General attribute modification  | th:attr
-th:attrprepend
-th:attrappend |
-| 6     | Specific attribute modification | th:value
-th:href
-th:src ···          |
-| 7     | Text (tag body modification)    | th:text
-th:utext                    |
-| 8     | Fragment specification 声明片段 | th:fragment                        |
-| 9     | Fragment removal                | th:remove                          |
+![spring-boot-web-thymeleaf](https://raw.githubusercontent.com/tyronczt/spring-boot-learning/master/images/spring-boot-web-thymeleaf.png)
 
 Standard Expression features:
 
@@ -1223,3 +1203,189 @@ public class MyErrorAttributes extends DefaultErrorAttributes {
 ```
 
 最终效果：自适应的响应和自定义的错误内容。
+
+### 六、配置嵌入式Servlet容器
+
+SpringBoot默认使用嵌入的Servlet容器---Tomcat
+
+![spring-boot-web-tomcat](https://raw.githubusercontent.com/tyronczt/spring-boot-learning/master/images/spring-boot-web-tomcat-01.png)
+
+#### 6.1、修改Servlet容器相关配置
+
+1）、修改配置文件`application.properties`，设置ServerProperties属性
+
+```properties
+server.port=8081
+server.context-path=/crud
+
+server.tomcat.uri-encoding=UTF-8
+
+//通用的Servlet容器设置
+server.xxx
+//Tomcat的设置
+server.tomcat.xxx
+```
+
+2）编写WebServerFactoryCustomizer，设置Server属性
+
+```java
+//    SpringBoot1.5.x
+//    @Bean
+//    public EmbeddedServletContainerCustomizer embeddedServletContainerCustomizer() {
+//        return new EmbeddedServletContainerCustomizer() {
+//            @Override
+//            public void customize(ConfigurableEmbeddedServletContainer container) {
+//                container.setPort(8090);
+//            }
+//        };
+//    }
+    // SpringBoot2.x.x
+    @Bean
+    public WebServerFactoryCustomizer webServerFactoryCustomizer() {
+        return new WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>() {
+            @Override
+            public void customize(ConfigurableServletWebServerFactory factory) {
+                factory.setPort(8090);
+            }
+        };
+    }
+    // 附上官方文档：https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-programmatic-embedded-container-customization
+```
+
+#### 6.2、注册Servlet三大组件【Servlet、Filter、Listener】
+
+```java
+// 注册Servlet组件------ServletRegistrationBean
+@Bean
+public ServletRegistrationBean myServlet() {
+    return new ServletRegistrationBean(new MyServlet(), "/myservlet");
+}
+
+public class MyServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doPost(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("Hello tyron MyServlet!");
+    }
+```
+
+```java
+// 注册Filter组件------FilterRegistrationBean
+@Bean
+public FilterRegistrationBean myFilter() {
+    FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+    filterRegistrationBean.setFilter(new MyFilter());
+    filterRegistrationBean.setUrlPatterns(Arrays.asList("/myfilter", "/myservlet"));
+    return filterRegistrationBean;
+}
+
+public class MyFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        System.out.println("MyFilter process......");
+        filterChain.doFilter(servletRequest, servletResponse);
+    }
+}
+```
+
+```java
+// 注册Listener------ServletListenerRegistrationBean
+@Bean
+public ServletListenerRegistrationBean myListener(){
+    return  new ServletListenerRegistrationBean(new MyListener());
+}
+
+public class MyListener implements ServletContextListener {
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        System.out.println("contextInitialized...启动");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        System.out.println("contextDestroyed...销毁");
+    }
+}
+```
+
+SpringBoot自动配置SpringMVC前端控制器：DispatcherServlet
+
+```java
+@Bean(name = DEFAULT_DISPATCHER_SERVLET_REGISTRATION_BEAN_NAME)
+		@ConditionalOnBean(value = DispatcherServlet.class, name = DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
+		public DispatcherServletRegistrationBean dispatcherServletRegistration(
+				DispatcherServlet dispatcherServlet) {
+            // 默认拦截：/ 所有请求，包括静态资源，但不拦截jsp请求
+            // 通过修改spring.mvc.servlet.path来修改SpringMVC默认拦截的请求路径
+			DispatcherServletRegistrationBean registration = new DispatcherServletRegistrationBean(
+					dispatcherServlet, this.webMvcProperties.getServlet().getPath());
+			registration.setName(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME);
+			registration.setLoadOnStartup(
+					this.webMvcProperties.getServlet().getLoadOnStartup());
+			if (this.multipartConfig != null) {
+				registration.setMultipartConfig(this.multipartConfig);
+			}
+			return registration;
+		}
+```
+
+#### 6.3、替换其他嵌入式Servlet容器
+
+默认支持：
+
+Tomcat（默认）
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+Jetty
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <exclusions>
+        <exclusion>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </exclusion>
+    </exclusions>
+</dependency>
+
+<!-- 引入jetty -->
+<dependency>
+    <artifactId>spring-boot-starter-jetty</artifactId>
+    <groupId>org.springframework.boot</groupId>
+</dependency>
+```
+
+Undertow
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <exclusions>
+        <exclusion>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </exclusion>
+    </exclusions>
+</dependency>
+
+<!-- 引入undertow -->
+<dependency>
+    <artifactId>spring-boot-starter-undertow</artifactId>
+    <groupId>org.springframework.boot</groupId>
+</dependency>
+```
