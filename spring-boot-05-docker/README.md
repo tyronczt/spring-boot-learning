@@ -77,7 +77,7 @@ systemctl stop docker
 
 附：[centos7 docker升级到最新稳定版本](https://www.cnblogs.com/wdliu/p/10194332.html)
 
-![最新版本](https://raw.githubusercontent.com/tyronczt/spring-boot-learning/master/images/spring-boot-docker-%20version.png)
+![最新版本](https://raw.githubusercontent.com/tyronczt/spring-boot-learning/master/images/spring-boot-docker-version.png)
 
 #### 2）、测试 Docker 运行
 
@@ -126,9 +126,43 @@ CONTAINER ID     IMAGE           COMMAND      CREATED            STATUS
 54f4984ed6a8     hello-world     "/hello"     20 seconds ago     Exited (0) 19 seconds ago
 ```
 
-## 4、Docker常用命令&操作
+## 4、配置阿里云镜像加速器
 
-### 1）镜像操作
+#### 1）登录阿里云开发者平台
+
+[https://cr.console.aliyun.com](https://cr.console.aliyun.com/)
+
+#### 2）获取加速器地址，并配置
+
+```shell
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://xx-your-xx.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+# 检查docker镜像是否配置成功
+docker info
+#倒数三四行
+Registry Mirrors:
+  https://l3onhrwo.mirror.aliyuncs.com/    ---阿里云镜像
+  https://docker.mirrors.ustc.edu.cn/      ---中国科学技术大学镜像
+
+#或者可以查看 /etc/docker 下的daemon.json文件
+[root@localhost ~]# cat /etc/docker/daemon.json 
+{
+  "registry-mirrors": ["https://l3onhrwo.mirror.aliyuncs.com","https://docker.mirrors.ustc.edu.cn"]
+}
+[root@localhost ~]# 
+
+```
+
+## 5、Docker常用命令&操作
+
+#### 1）镜像操作
 
 | 操作 | 命令                                            | 说明                                                     |
 | ---- | ----------------------------------------------- | -------------------------------------------------------- |
@@ -139,7 +173,7 @@ CONTAINER ID     IMAGE           COMMAND      CREATED            STATUS
 
 https://hub.docker.com/
 
-### 2）容器操作
+#### 2）容器操作
 
 软件镜像（QQ安装程序）----运行镜像----产生一个容器（正在运行的软件，运行的QQ）；
 
