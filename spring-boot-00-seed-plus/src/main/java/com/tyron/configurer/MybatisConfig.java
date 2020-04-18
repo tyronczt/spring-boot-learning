@@ -5,7 +5,6 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInterceptor;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -25,12 +24,16 @@ public class MybatisConfig {
 
     @Bean
     public SqlSessionFactory sqlSessionFactoryBean(DataSource datasource) throws Exception {
-        Interceptor interceptor = new PageInterceptor();
+        /**
+         *  使用MybatisSqlSessionFactoryBean解决invalid-bound-statement-not-found的问题
+         *  https://mybatis.plus/guide/faq.html#%E5%87%BA%E7%8E%B0-invalid-bound-statement-not-found-%E5%BC%82%E5%B8%B8
+         */
         MybatisSqlSessionFactoryBean sqlSessionFactoryBean = new MybatisSqlSessionFactoryBean();
         sqlSessionFactoryBean.setDataSource(datasource);
         sqlSessionFactoryBean.setTypeAliasesPackage(ENTITY_PACKAGE_CONF);
 
-        //PageHelper的代码配置，在application-dev.yml中有相应配置，两种方法选一种
+        // PageHelper的代码配置，在application-dev.yml中有相应配置，两种方法选一种
+        Interceptor interceptor = new PageInterceptor();
         PageHelper pageHelper = new PageHelper();
         Properties properties = new Properties();
         properties.setProperty("pageSizeZero", "true");
@@ -38,9 +41,9 @@ public class MybatisConfig {
         properties.setProperty("supportMethodsArguments", "true");
         properties.setProperty("helperDialect", "mysql");
         pageHelper.setProperties(properties);
-        //添加插件，旧版本的pageHelper参数已过期，新版本是使用PageInterceptor对象作为参数
+        // 添加插件，旧版本的pageHelper参数已过期，新版本是使用PageInterceptor对象作为参数
         sqlSessionFactoryBean.setPlugins(new Interceptor[]{interceptor});
-        //配置mapper.xml的路径，和xml中mybatis的配置对应
+        // 配置mapper.xml的路径，和xml中mybatis的配置对应
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         sqlSessionFactoryBean.setMapperLocations(resolver.getResources("classpath*:mapper/*.xml"));
         return sqlSessionFactoryBean.getObject();
