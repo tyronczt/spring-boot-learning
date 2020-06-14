@@ -4,6 +4,9 @@
 
 >  来源自：https://github.com/lihengming/spring-boot-api-project-seed
 
+### 演示GIF
+![演示](https://github.com/tyronczt/spring-boot-learning/blob/master/images/seed-plus.gif)<br/>
+
 ### 第一步 ：下载源码
 
 https://github.com/tyronczt/spring-boot-learning/tree/master/spring-boot-00-seed-plus
