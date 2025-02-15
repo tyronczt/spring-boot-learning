@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns="">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+    <meta charset="UTF-8">
+    <title>AI 对话助手</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        #chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .user {
+            flex-direction: row-reverse;
+            background-color: #e3f2fd;
+        }
+
+        .bot {
+            background-color: #f5f5f5;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #send-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .bot-message {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        /* 消息容器 */
+        .message {
+            margin: 15px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            min-width: 0; /* 防止内容溢出 */
+        }
+
+        /* 文本内容 */
+        .text {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 5px;
+            background: white;
+            word-break: break-word; /* 自动换行 */
+            white-space: pre-wrap;  /* 保留换行 */
+        }
+
+        /* 用户消息特殊样式 */
+        .user .text {
+            background: #e3f2fd;
+            margin-left: 50px; /* 与头像对齐 */
+        }
+
+        /* 机器人消息特殊样式 */
+        .bot .text {
+            background: #f5f5f5;
+            margin-right: 50px;
+        }
+
+        /* 滚动到最新消息 */
+        #chat-messages {
+            scroll-behavior: smooth;
+            padding-bottom: 20px;
+        }
+        /* 新增Markdown样式 */
+        .text {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+        }
+
+        .text h1, .text h2, .text h3 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        .text code {
+            background-color: rgba(27,31,35,0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 0.3em;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <h2>AI 对话助手</h2>
+    <div id="chat-messages"></div>
+    <div class="input-area">
+        <input type="text" id="chat-input" placeholder="输入你的问题...">
+        <button id="send-button">发送</button>
+    </div>
+</div>
+
+<script>
+    $('#chat-input').keypress(function(e) {
+        if (e.which === 13) {
+            $('#send-button').click();
+            return false;
+        }
+    });
+
+    // 滚动到底部
+    function scrollToBottom() {
+        const container = $('#chat-messages');
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    $('#send-button').click(function () {
+        const message = $('#chat-input').val();
+
+        // 立即清空输入框
+        $('#chat-input').val('');
+
+        // 用户消息（保持原有样式）
+        var userMessage = $('<div class="message user"></div>');
+        userMessage.append('<img class="avatar" src="/images/user.png" alt="用户头像">');
+        userMessage.append(`<div class="content"><span class="nickname">你</span><div class="text">${message}</div></div>`);
+
+        // 机器人消息容器（先创建空容器）
+        var botMessage = $('<div class="message bot"></div>');
+        botMessage.append('<img class="avatar" src="/images/robot.png" alt="助手头像">');
+        botMessage.append('<div class="content"><span class="nickname">助手</span><div class="text"></div></div>');
+
+        // 按顺序添加消息
+        $('#chat-messages').append(userMessage, botMessage);
+
+        // 流式处理
+        const eventSource = new EventSource(`/ai/generateStream?message=` + message);
+        eventSource.onmessage = function (event) {
+            botMessage.find('.text').append(event.data);  // 追加到机器人消息内容区
+        };
+
+        // 错误处理
+        eventSource.onerror = function (err) {
+            $('#chat-input').val(''); // 确保网络异常时也清空
+            console.error("连接错误:", err);
+            eventSource.close();
+        };
+    });
+    function scrollToMessage(element) {
+        element.get(0).scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+        });
+    }
+
+    // 在添加消息后调用
+    $('#chat-messages').append(userMessage, botMessage);
+    scrollToMessage(botMessage);  // 滚动到最新消息
+
+// 在流式处理部分修改为：
+eventSource.onmessage = function (event) {
+    const markdownText = event.data;
+
+    // 1. 安全过滤（使用DOMPurify）
+    const cleanHtml = DOMPurify.sanitize(
+        marked.parse(markdownText, {
+            breaks: true, // 自动换行
+            highlight: function(code, lang) {
+                return hljs.highlightAuto(code).value;
+            }
+        })
+    );
+
+    // 2. 增量更新内容
+    const textContainer = botMessage.find('.text');
+    textContainer.html(cleanHtml); // 使用html()替代append()
+
+    // 3. 重新高亮代码块
+    textContainer.find('pre code').each(function(i, block) {
+        hljs.highlightElement(block);
+    });
+
+    // 4. 保持滚动
+    scrollToMessage(botMessage);
+};
+</script>
+
+</body>
+</html>
